@@ -4,3 +4,4 @@
 ## Dispositivi connessi:
 ### SSD1306
 ### DHT22
+### BMP280
