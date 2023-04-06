@@ -20,8 +20,6 @@
 
 #define sensor s_serial
 
-
-
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 DHT dht(DHTPIN, DHTTYPE);
@@ -53,22 +51,15 @@ void loop() {
   float t = dht.readTemperature();
   float p = bmp.readPressure();
   float a = bmp.readAltitude(1015.5);
+  int c = getCo2();
 
   if (isnan(h) || isnan(t) || isnan(p) || isnan(a)) {
     Serial.println(F("Failed to read from sensor!"));
     //return;
   } else {
-    printSensor(h, t, p, a);
+    printSensor(h, t, p, a, c);
   }
 
-  if (dataRecieve()) {
-    Serial.print("CO2: ");
-    Serial.print(CO2PPM);
-    Serial.println("ppm");
-  }
-
-  display.println(count++, DEC);
-  display.display();
   delay(2000);
 }
 
@@ -94,7 +85,7 @@ void messaggioBenvenuto() {
   display.clearDisplay();
 }
 
-void printSensor(float h, float t, float p, float a) {
+void printSensor(float h, float t, float p, float a, int c) {
   display.setCursor(0, 0);
   display.clearDisplay();
   display.print("Umidita': ");
@@ -114,7 +105,7 @@ void printSensor(float h, float t, float p, float a) {
   display.println(" mt");
 
   display.print("CO2: ");
-  display.print(CO2PPM);
+  display.print(c);
   display.println(" ppm");
   //display.println();
   display.display();
@@ -141,7 +132,7 @@ void initBMP280() {
   }
 }
 
-bool dataRecieve(void) {
+int getCo2(void) {
   byte data[10] = {0,0,0,0,0,0,0,0,0, 0};
   int i = 0;
   //transmit command data
@@ -176,21 +167,10 @@ bool dataRecieve(void) {
     }
   }
 
-  //printRX(data);
-
-  Serial.println("");
-  /*
-  if ((i != 9) || (1 + (0xFF ^ (byte)(data[1] + data[2] + data[3] + data[4] + data[5] + data[6] + data[7]))) != data[8]) {
-    return false;
-  }
-  */
-  CO2PPM = (int)data[2] * 256 + (int)data[3];
-  temperature = (int)data[4] - 40;
-  return true;
+  return (int)data[2] * 256 + (int)data[3];
 }
 
-void printRX(byte *data)
-{
+void printRX(byte *data) {
   Serial.println("Start\tCommand\tHigh\tLow\tB4\tB5\tB6\tB7\tChs\tTest\tsum");
   for(int i = 0; i < 10; i++)
   {
